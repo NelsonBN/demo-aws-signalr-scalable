@@ -1,0 +1,141 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome!!!</h1>
+
+    <hr />
+
+    <div class="row justify-content-center">
+        <div id="live-chat" class="jumbotron p-2 col-6">
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-1">
+        <div class="col-6">
+            <div class="input-group mt-3">
+                <div id="status" class="w-100 text-left text-danger">Offline</div>
+                <input id="message" type="text" class="form-control" placeholder="Message..." aria-label="Message..." aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button id="btn-send" type="submit" class="btn btn-outline-secondary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="client-balloon" class="d-none">
+        <div class="chat-balloon float-left w-100 mt-2">
+            <div class='bg-primary text-white float-right p-1 message-balloon'>
+            </div>
+        </div>
+    </div>
+
+    <div id="server-balloon" class="d-none">
+        <div class="chat-balloon float-left w-100 mt-2">
+            <div class="bg-success text-white float-left p-1 text-left">
+                <strong class="instance-balloon d-block"></strong>
+                <strong class="machine-balloon d-block"></strong>
+                <div class="message-balloon d-block"></div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+        <script>
+            var url = "https://signalr.technobre.com/chat";
+            console.log("Url", url);
+
+            //Disable send button until connection is established
+            $("#btn-send").prop('disabled', true);
+
+            $("#btn-send").click(function () {
+                let message = $("#message").val();
+
+                if (message != "") {
+                    $("#message").val(""); // Clean input
+            
+                    connection.invoke("OnMessage", message)
+                        .catch(function (err) {
+                            return console.error(err.toString());
+                        });
+
+                    var clientBalloon = $("#client-balloon > .chat-balloon").clone();
+                    clientBalloon.find(".message-balloon").html(message);
+                    clientBalloon.find(".instance-balloon").html("dd");
+                    clientBalloon.find(".machine-balloon").html("dd111");
+
+                    $("#live-chat").append(clientBalloon);
+                    console.log("Client message: ", message);
+                }
+            });
+
+            $('#message').keypress(function (e) { // Send message when the client press enter
+                var key = e.which;
+                if (key == 13) {
+                    $('#btn-send').click();
+                    return false;
+                }
+            });
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl(url, {
+                    skipNegotiation: true,
+                    transport: signalR.HttpTransportType.WebSockets
+                })
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.onclose(async () => {
+                await start();
+            });
+
+            connection.on("OnMessage", function (serverMessage) {
+
+                var serverBalloon = $("#server-balloon > .chat-balloon").clone();
+                serverBalloon.find(".message-balloon").html(serverMessage.text);
+                serverBalloon.find(".instance-balloon").html(serverMessage.awsInstanceId);
+                serverBalloon.find(".machine-balloon").html(serverMessage.machineName);
+
+                $("#live-chat").append(serverBalloon);
+                console.log("Server message: ", serverMessage)
+            });
+
+
+            async function start() {
+                try {
+                    await connection.start();
+                    updateStatus(true);
+                } catch (err) {
+                    updateStatus(false);
+                    console.error(err);
+                    setTimeout(start, 5000);
+                }
+            };
+
+            function updateStatus(online) {
+                if (online == true) {
+                    $("#btn-send").prop('disabled', false);
+                    console.log("SignalR connected...");
+
+                    $("#status").html("Online");
+                    $("#status").addClass("text-success");
+                    $("#status").removeClass("text-danger");
+                }
+                else {
+                    $("#btn-send").prop('disabled', true);
+                    console.log("SignalR disconnected...");
+
+                    $("#status").html("Offline");
+                    $("#status").addClass("text-danger");
+                    $("#status").removeClass("text-success");
+                }
+            }
+
+
+            // Start the connection.
+            start();
+        </script>
+    }
+</div>
