@@ -1,4 +1,4 @@
-# Demo SignalR
+# Demo SignalR scalable on AWS
 Demo of the SignalR scale-out on AWS. I am going to use the redis as a backplane to can scale a SingalR cluster horizontally.
 
 
@@ -167,4 +167,4 @@ http://<ec2-public-api>:801/swagger/index.html
 
 ## LICENSE
 
-[MIT](https://github.com/NelsonBN/demo-websockets/blob/main/LICENSE)
+[MIT](https://github.com/NelsonBN/demo-aws-signalr-scalable/blob/main/LICENSE)

@@ -29,7 +29,7 @@ namespace Demo.AWS.SignalR.Server
                 .AddStackExchangeRedis(options => {
                     options.Configuration.ClientName = "DemoSignalR";
                     options.Configuration.EndPoints.Add(
-                        this._configuration.GetValue<string>("RedisEndpoint")
+                        this._configuration.GetConnectionString("Redis")
                     );
                 });
 
