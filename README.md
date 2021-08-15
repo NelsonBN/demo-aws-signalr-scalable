@@ -64,7 +64,7 @@ docker network create --driver bridge signalr-network
 
 #### Run container
 ```bash
-docker run --name server-redis -d -p 6379:6379 redis
+docker run --name server-redis -d -p --net signalr-network 6379:6379 redis
 ```
 
 #### Debug connections
